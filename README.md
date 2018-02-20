@@ -1,3 +1,6 @@
+python preprocess.py --config config/config.cfg
+
+
 # Deep Trading Agent
 [![license](https://img.shields.io/packagist/l/doctrine/orm.svg)](https://github.com/samre12/deep-trading-agent/blob/master/LICENSE)
 [![dep1](https://img.shields.io/badge/implementation-tensorflow-orange.svg)](https://www.tensorflow.org/)

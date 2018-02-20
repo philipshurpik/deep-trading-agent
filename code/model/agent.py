@@ -284,7 +284,7 @@ class Agent(BaseAgent):
 
         self.sess.run(tf.local_variables_initializer())
         self.sess.run(tf.global_variables_initializer())
-        self._saver = tf.train.Saver(self.q.weights.values() + [self.step_op], max_to_keep=30)
+        self._saver = tf.train.Saver(list(self.q.weights.values()) + [self.step_op], max_to_keep=30)
         
         self.load_model()
         self.update_target_network()

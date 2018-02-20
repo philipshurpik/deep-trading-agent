@@ -1,5 +1,4 @@
 import json
-from ConfigParser import ConfigParser
 
 from utils.constants import *
 from utils.strings import *
