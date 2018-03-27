@@ -6,14 +6,13 @@ import tensorflow as tf
 
 from utils.constants import *
 from utils.strings import *
-from utils.util import print_and_log_message, print_and_log_message_list
 
 class BaseAgent(object):
     '''Base class containing all the parameters for reinforcement learning'''
 
     def __init__(self, config, logger):
         self.logger = logger
-        self._checkpoint_dir = os.path.join("checkpoints", config[SAVE_DIR])
+        self._checkpoint_dir = os.path.join(config[SAVE_DIR], 'checkpoints/')
         if not os.path.exists(self._checkpoint_dir):
             os.makedirs(self._checkpoint_dir)
 
@@ -57,12 +56,12 @@ class BaseAgent(object):
 
     def save_model(self, step=None):
         message = "Saving checkpoint to {}".format(self.checkpoint_dir)
-        print_and_log_message(message, self.logger)
+        self.logger.info(message)
         self.saver.save(self.sess, self.checkpoint_dir, global_step=step)
 
     def load_model(self):
         message = "Loading checkpoint from {}".format(self.checkpoint_dir)
-        print_and_log_message(message, self.logger)
+        self.logger.info(message)
 
         ckpt = tf.train.get_checkpoint_state(self.checkpoint_dir)
         if ckpt and ckpt.model_checkpoint_path:
@@ -70,9 +69,9 @@ class BaseAgent(object):
             fname = os.path.join(self.checkpoint_dir, ckpt_name)
             self.saver.restore(self.sess, fname)
             message = "Checkpoint successfully loaded from {}".format(fname)
-            print_and_log_message(message, self.logger)
+            self.logger.info(message)
             return True
         else:
             message = "Checkpoint could not be loaded from {}".format(self.checkpoint_dir)
-            print_and_log_message(message, self.logger)
+            self.logger.info(message)
             return False

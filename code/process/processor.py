@@ -4,7 +4,6 @@ from talib.abstract import *
 
 from utils.constants import *
 from utils.strings import *
-from utils.util import print_and_log_message, print_and_log_message_list
 
 class Processor:
     '''Preprocessor for Bitcoin prices dataset as obtained by following the procedure 
@@ -20,6 +19,10 @@ class Processor:
         self.generate_attributes()
 
     @property
+    def diff_blocks(self):
+        return self._diff_blocks
+
+    @property
     def price_blocks(self):
         return self._price_blocks
 
@@ -30,7 +33,7 @@ class Processor:
     def preprocess(self):
         data = pd.read_csv(self.dataset_path)
         message = 'Columns found in the dataset {}'.format(data.columns)
-        print_and_log_message(message, self.logger)
+        self.logger.info(message)
         data = data.dropna()
         start_time_stamp = data['Timestamp'][0]
         timestamps = data['Timestamp'].apply(lambda x: (x - start_time_stamp) / 60)
@@ -38,37 +41,43 @@ class Processor:
         data.insert(0, 'blocks', timestamps)
         blocks = data.groupby('blocks')
         message = 'Number of blocks of continuous prices found are {}'.format(len(blocks))
-        print_and_log_message(message, self.logger)
+        self.logger.info(message)
         
         self._data_blocks = []
         distinct_episodes = 0
         for name, indices in blocks.indices.items():
-            if len(indices) > (self.history_length + self.horizon):
+            ''' 
+            Length of the block should exceed the history length and horizon by 1.
+            Extra 1 is required to normalize each price block by previos time stamp
+            '''
+            if len(indices) > (self.history_length + self.horizon + 1):
+                
                 self._data_blocks.append(blocks.get_group(name))
-                distinct_episodes = distinct_episodes + (len(indices) - (self.history_length + self.horizon) + 1)
+                # similarly, we subtract an extra 1 to calculate the number of distinct episodes
+                distinct_episodes = distinct_episodes + (len(indices) - (self.history_length + self.horizon) + 1 + 1)
 
         data = None
         message_list = ['Number of usable blocks obtained from the dataset are {}'.format(len(self._data_blocks))]
         message_list.append('Number of distinct episodes for the current configuration are {}'.format(distinct_episodes))
-        print_and_log_message_list(message_list, self.logger)
+        map(self.logger.info, message_list)
 
     def generate_attributes(self):
+        self._diff_blocks = []
         self._price_blocks = []
         self._timestamp_blocks = []
+
         for data_block in self._data_blocks:
-            weighted_prices = data_block['price_close'].values
-            diff = np.diff(weighted_prices)
-            diff = np.insert(diff, 0, 0)
-            sma15 = SMA(data_block, timeperiod=15, price='price_close')
-            sma30 = SMA(data_block, timeperiod=30, price='price_close')        
+            block = data_block[['price_close', 'price_low', 'price_high', 'volume']]
+            closing_prices = block['price_close']
+
+            diff_block = closing_prices.shift(-1)[:-1].subtract(closing_prices[:-1])
+
+            # currently normalizing the prices by previous prices of the same category
+            normalized_block = block.shift(-1)[:-1].truediv(block[:-1])        
             
-            price_block = np.column_stack((weighted_prices, diff, sma15, 
-                                            weighted_prices - sma15, sma15 - sma30))
-            price_block = pd.DataFrame(data=price_block)
-            price_block.fillna(method='bfill', inplace=True)
-                                
-            self._price_blocks.append(price_block.as_matrix())
-            self._timestamp_blocks.append(data_block['DateTime_UTC'].values)
+            self._diff_blocks.append(diff_block.as_matrix())
+            self._price_blocks.append(normalized_block.as_matrix())
+            self._timestamp_blocks.append(data_block['DateTime_UTC'].values[1:])
         
         self._data_blocks = None #free memory
             
