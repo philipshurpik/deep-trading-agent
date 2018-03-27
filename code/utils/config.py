@@ -1,7 +1,8 @@
 import json
 
+import os
 from os.path import join
-from ConfigParser import ConfigParser
+import configparser
 
 from utils.constants import *
 from utils.strings import *
@@ -12,7 +13,7 @@ def add_parent_dir(parent_dir, path):
 def get_config(config_parser):
     config = {}
     #Global
-    config[PARENT_DIR] = config_parser.get(GLOBAL, PARENT_DIR)
+    config[PARENT_DIR] = os.getcwd().replace("/code", "/")
 
     #Logging
     config[LOG_FILE] = add_parent_dir(config[PARENT_DIR], config_parser.get(LOGGING, LOG_FILE))
