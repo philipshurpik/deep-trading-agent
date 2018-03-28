@@ -1,12 +1,12 @@
-from ConfigParser import ConfigParser
+import configparser
 import sys
 import logging
 
-from constants import *
-from strings import DEEP_TRADING_AGENT
+from .constants import *
+from .strings import DEEP_TRADING_AGENT
 
 def get_config_parser(filename):
-    config = ConfigParser(allow_no_value=True)
+    config = configparser.ConfigParser(allow_no_value=True)
     config.read(filename)
     return config
 
