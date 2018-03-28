@@ -11,7 +11,7 @@ class DeepSense:
     '''DeepSense Architecture for Q function approximation over Timeseries'''
 
     def __init__(self, deepsenseparams, logger, sess, config, name=DEEPSENSE):
-        self.params = deepsenseparams
+        self._params = deepsenseparams
         self.logger = logger
         self.sess = sess
         self.__name__ = name
@@ -28,7 +28,11 @@ class DeepSense:
 
     @property
     def params(self):
-        return self.params
+        return self._params
+
+    @params.setter
+    def params(self, value):
+        self._params = value
 
     @property
     def name(self):
